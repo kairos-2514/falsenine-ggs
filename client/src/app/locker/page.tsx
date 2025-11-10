@@ -25,9 +25,6 @@ interface WindowWithRazorpay extends Window {
   razorpayLoaded?: boolean;
 }
 
-// Resolve API base from env and strip any trailing slash
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
-
 export default function LockerPage() {
   const { navigateTo } = useNavigation();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -184,10 +181,10 @@ export default function LockerPage() {
     try {
       const totalAmount = calculateTotal();
 
-      // Step 1: Create Razorpay order (using env-based API)
+      // Step 1: Create Razorpay order
       console.log("💳 Creating Razorpay order...");
       const { data: razorpayOrder } = await axios.post(
-        `${API_URL}/api/v2/razorpay/create-transaction`,
+        "http://localhost:4000/api/v2/razorpay/create-transaction",
         { amount: totalAmount }
       );
       console.log("✅ Razorpay order created:", razorpayOrder.id);
@@ -236,13 +233,14 @@ export default function LockerPage() {
 
       console.log("📦 Order data prepared:", orderData.orderId);
 
-      // Step 3: Save order to DynamoDB IMMEDIATELY (test mode) using env-based API
+      // Step 3: Save order to DynamoDB IMMEDIATELY (before opening Razorpay modal)
+      // This is for test mode - order is saved as soon as Razorpay is called
       console.log("💾 Saving order to DynamoDB immediately (test mode):");
       console.log("📤 Order payload:", JSON.stringify(orderData, null, 2));
 
       try {
         const saveResponse = await axios.post(
-          `${API_URL}/api/orders/test-save`,
+          "http://localhost:4000/api/orders/test-save",
           orderData,
           {
             headers: { "Content-Type": "application/json" },
